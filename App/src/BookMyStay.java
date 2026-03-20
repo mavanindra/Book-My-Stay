@@ -1,9 +1,8 @@
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 /**
- * Use Case 5 - Booking Request Queue (FIFO)
- * @version 5.0
+ * Use Case 6 - Room Allocation
+ * @version 6.0
  */
 
 class Reservation {
@@ -25,17 +24,13 @@ class Reservation {
 }
 
 class BookingRequestQueue {
-    private Queue<Reservation> queue;
+    private Queue<Reservation> queue = new LinkedList<>();
 
-    public BookingRequestQueue() {
-        queue = new LinkedList<>();
-    }
-
-    public void addRequest(Reservation r) {
+    public void add(Reservation r) {
         queue.offer(r);
     }
 
-    public Reservation getNext() {
+    public Reservation next() {
         return queue.poll();
     }
 
@@ -44,25 +39,77 @@ class BookingRequestQueue {
     }
 }
 
+class RoomInventory {
+    private Map<String, Integer> availability = new HashMap<>();
+
+    public RoomInventory() {
+        availability.put("Single", 2);
+        availability.put("Double", 1);
+        availability.put("Suite", 1);
+    }
+
+    public int getAvailable(String type) {
+        return availability.getOrDefault(type, 0);
+    }
+
+    public void decrease(String type) {
+        availability.put(type, availability.get(type) - 1);
+    }
+}
+
+class RoomAllocationService {
+
+    private Set<String> allocatedIds = new HashSet<>();
+    private Map<String, Set<String>> assigned = new HashMap<>();
+
+    public void allocate(Reservation r, RoomInventory inventory) {
+        String type = r.getRoomType();
+
+        if (inventory.getAvailable(type) <= 0) {
+            System.out.println("No rooms available for " + type + " for Guest: " + r.getGuestName());
+            return;
+        }
+
+        String roomId = generateId(type);
+
+        allocatedIds.add(roomId);
+        assigned.putIfAbsent(type, new HashSet<>());
+        assigned.get(type).add(roomId);
+
+        inventory.decrease(type);
+
+        System.out.println("Booking confirmed for Guest: "
+                + r.getGuestName() + ", Room ID: " + roomId);
+    }
+
+    private String generateId(String type) {
+        int count = assigned.getOrDefault(type, new HashSet<>()).size() + 1;
+        String id = type + "-" + count;
+
+        while (allocatedIds.contains(id)) {
+            count++;
+            id = type + "-" + count;
+        }
+        return id;
+    }
+}
+
 public class BookMyStay {
     public static void main(String[] args) {
 
-        System.out.println("Booking Request Queue");
+        System.out.println("Room Allocation Processing");
 
-        BookingRequestQueue bookingQueue = new BookingRequestQueue();
+        BookingRequestQueue queue = new BookingRequestQueue();
+        RoomInventory inventory = new RoomInventory();
+        RoomAllocationService service = new RoomAllocationService();
 
-        Reservation r1 = new Reservation("Abhi", "Single");
-        Reservation r2 = new Reservation("Subha", "Double");
-        Reservation r3 = new Reservation("Vanmathi", "Suite");
+        queue.add(new Reservation("Abhi", "Single"));
+        queue.add(new Reservation("Subha", "Single"));
+        queue.add(new Reservation("Vanmathi", "Suite"));
 
-        bookingQueue.addRequest(r1);
-        bookingQueue.addRequest(r2);
-        bookingQueue.addRequest(r3);
-
-        while (bookingQueue.hasRequests()) {
-            Reservation r = bookingQueue.getNext();
-            System.out.println("Processing booking for Guest: "
-                    + r.getGuestName() + ", Room Type: " + r.getRoomType());
+        while (queue.hasRequests()) {
+            Reservation r = queue.next();
+            service.allocate(r, inventory);
         }
     }
 }
