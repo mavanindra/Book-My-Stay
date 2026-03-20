@@ -1,6 +1,11 @@
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- * Use Case 2 - Room Initialization
+ * Use Case 3 - Centralized Inventory
+ * @version 3.0
  */
+
 abstract class Room {
     protected int beds;
     protected int size;
@@ -37,6 +42,29 @@ class SuiteRoom extends Room {
     }
 }
 
+class RoomInventory {
+    private Map<String, Integer> availability;
+
+    public RoomInventory() {
+        availability = new HashMap<>();
+        initialize();
+    }
+
+    private void initialize() {
+        availability.put("Single", 5);
+        availability.put("Double", 3);
+        availability.put("Suite", 2);
+    }
+
+    public Map<String, Integer> getAvailability() {
+        return availability;
+    }
+
+    public void update(String type, int count) {
+        availability.put(type, count);
+    }
+}
+
 public class BookMyStay {
     public static void main(String[] args) {
 
@@ -44,22 +72,20 @@ public class BookMyStay {
         Room doubleRoom = new DoubleRoom();
         Room suite = new SuiteRoom();
 
-        int singleAvailable = 5;
-        int doubleAvailable = 3;
-        int suiteAvailable = 2;
+        RoomInventory inventory = new RoomInventory();
 
-        System.out.println("Hotel Room Initialization\n");
+        System.out.println("Hotel Room Inventory Status\n");
 
         System.out.println("Single Room:");
         single.display();
-        System.out.println("Available: " + singleAvailable + "\n");
+        System.out.println("Available Rooms: " + inventory.getAvailability().get("Single") + "\n");
 
         System.out.println("Double Room:");
         doubleRoom.display();
-        System.out.println("Available: " + doubleAvailable + "\n");
+        System.out.println("Available Rooms: " + inventory.getAvailability().get("Double") + "\n");
 
         System.out.println("Suite Room:");
         suite.display();
-        System.out.println("Available: " + suiteAvailable);
+        System.out.println("Available Rooms: " + inventory.getAvailability().get("Suite"));
     }
 }
